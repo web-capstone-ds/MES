@@ -27,14 +27,15 @@ try
             
             // Domain Services
             services.AddSingleton<LotControlService>();
+            services.AddHostedService(sp => sp.GetRequiredService<LotControlService>());
+
             services.AddSingleton<RecipeControlService>();
+
             services.AddSingleton<EquipmentMonitorService>();
+            services.AddHostedService(sp => sp.GetRequiredService<EquipmentMonitorService>());
             
             // Scenario Management
             services.AddSingleton<ScenarioLoader>();
-
-            // Background Service for MQTT Communication
-            // services.AddHostedService<MqttClientService>(); // Will be implemented in M2
         });
 
     using var host = builder.Build();
