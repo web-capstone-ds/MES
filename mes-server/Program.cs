@@ -36,6 +36,7 @@ try
             
             // Scenario Management
             services.AddSingleton<ScenarioLoader>();
+            services.AddHostedService(sp => sp.GetRequiredService<ScenarioLoader>());
         });
 
     using var host = builder.Build();

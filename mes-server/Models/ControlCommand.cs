@@ -20,5 +20,5 @@ public record LotEvent
     [JsonPropertyName("equipment_id")]    public string  EquipmentId   { get; init; } = "";
     [JsonPropertyName("lot_id")]          public string  LotId         { get; init; } = "";
     [JsonPropertyName("yield_pct")]       public float?  YieldPct      { get; init; }
-    [JsonPropertyName("total_unit_count")] public int?   TotalUnitCount { get; init; }
+    [JsonPropertyName("total_units")] public int?   TotalUnits { get; init; }
 }

@@ -118,7 +118,7 @@ public class EquipmentMonitorService : BackgroundService
         if (evt.HwErrorCode == "CAM_TIMEOUT_ERR")
             IncrementRuleCounter(_dailyCamTimeoutCount, evt.EquipmentId, 3, "R26 (CAM_TIMEOUT_ERR/일)");
         
-        if (evt.HwErrorCode == "VISION_SCORE_ERR" && evt.Reason.Contains("AggregateException"))
+        if (evt.HwErrorCode == "VISION_SCORE_ERR" && (evt.Reason?.Contains("AggregateException") ?? false))
             IncrementRuleCounter(_dailyAggregateExCount, evt.EquipmentId, 5, "R33 (AggregateException/일)");
 
         // Logging with color
