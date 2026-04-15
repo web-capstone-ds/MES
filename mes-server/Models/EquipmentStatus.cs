@@ -12,7 +12,7 @@ public record StatusEvent
 {
     [JsonPropertyName("equipment_id")]         public string  EquipmentId         { get; init; } = "";
     [JsonPropertyName("equipment_status")]     public string  Status              { get; init; } = "IDLE";
-    [JsonPropertyName("current_recipe")]       public string? CurrentRecipe       { get; init; }
+    [JsonPropertyName("recipe_id")]            public string? CurrentRecipe       { get; init; }
     [JsonPropertyName("current_unit_count")]    public int?    CurrentUnitCount    { get; init; }
     [JsonPropertyName("expected_total_units")]  public int?    ExpectedTotalUnits  { get; init; }
     [JsonPropertyName("current_yield_pct")]     public float?  CurrentYieldPct     { get; init; }
