@@ -1,0 +1,45 @@
+# ================================
+# MES Server .gitignore (C# / .NET 8)
+# ================================
+
+# 빌드 산출물
+mes-server/bin/
+mes-server/obj/
+*.exe
+*.dll
+*.pdb
+
+# 실제 환경변수 / 시크릿
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Local.json
+secrets.json
+.env
+
+# .NET User Secrets
+mes-server/Properties/launchSettings.json
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# 패키지 캐시
+*.nupkg
+**/packages/
+
+# 테스트 결과
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# 런타임 로그
+logs/
+*.log
