@@ -83,7 +83,7 @@ public class EquipmentMonitorService : BackgroundService
 
     private Task HandleHeartbeat(MQTTnet.MqttApplicationMessage message)
     {
-        var evt = JsonSerializer.Deserialize<HeartbeatEvent>(message.ConvertPayloadToString());
+        var evt = JsonSerializer.Deserialize<HeartbeatEvent>(System.Text.Encoding.UTF8.GetString(message.PayloadSegment));
         if (evt != null)
         {
             _lastHeartbeat[evt.EquipmentId] = DateTime.UtcNow;
@@ -93,7 +93,7 @@ public class EquipmentMonitorService : BackgroundService
 
     private Task HandleStatus(MQTTnet.MqttApplicationMessage message)
     {
-        var evt = JsonSerializer.Deserialize<StatusEvent>(message.ConvertPayloadToString());
+        var evt = JsonSerializer.Deserialize<StatusEvent>(System.Text.Encoding.UTF8.GetString(message.PayloadSegment));
         if (evt != null)
         {
             _currentStatus[evt.EquipmentId] = evt;
@@ -103,7 +103,7 @@ public class EquipmentMonitorService : BackgroundService
 
     private Task HandleAlarm(MQTTnet.MqttApplicationMessage message)
     {
-        var evt = JsonSerializer.Deserialize<AlarmEvent>(message.ConvertPayloadToString());
+        var evt = JsonSerializer.Deserialize<AlarmEvent>(System.Text.Encoding.UTF8.GetString(message.PayloadSegment));
         if (evt == null) return Task.CompletedTask;
 
         // Special Case: EAP_DISCONNECTED (§부록 A.5)
