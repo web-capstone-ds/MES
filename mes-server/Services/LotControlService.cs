@@ -30,7 +30,7 @@ public class LotControlService : BackgroundService
     {
         await _mqttClient.SubscribeAsync("ds/+/lot", MqttQualityOfServiceLevel.ExactlyOnce, async e =>
         {
-            var payload = e.ConvertPayloadToString();
+            var payload = System.Text.Encoding.UTF8.GetString(e.PayloadSegment);
             var lotEvent = JsonSerializer.Deserialize<LotEvent>(payload);
             if (lotEvent != null)
             {
