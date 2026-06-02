@@ -12,13 +12,15 @@ public class LotControlService : BackgroundService
 {
     private readonly ILogger<LotControlService> _logger;
     private readonly IMqttClientService _mqttClient;
+    private readonly RecommendationService _recommendations;
     private readonly ConcurrentDictionary<string, int> _startCount = new();
     private readonly ConcurrentDictionary<string, int> _endCount = new();
 
-    public LotControlService(ILogger<LotControlService> logger, IMqttClientService mqttClient)
+    public LotControlService(ILogger<LotControlService> logger, IMqttClientService mqttClient, RecommendationService recommendations)
     {
         _logger = logger;
         _mqttClient = mqttClient;
+        _recommendations = recommendations;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,7 +48,7 @@ public class LotControlService : BackgroundService
             case "LOT_START":
                 _startCount.AddOrUpdate(lotEvent.EquipmentId, 1, (_, count) => count + 1);
                 _logger.LogInformation("[{EqId}] LOT Started: {LotId}", lotEvent.EquipmentId, lotEvent.LotId);
-                CheckImbalance(lotEvent.EquipmentId);
+                await CheckImbalanceAsync(lotEvent.EquipmentId);
                 break;
 
             case "LOT_END":
@@ -55,7 +57,7 @@ public class LotControlService : BackgroundService
                 {
                     var classification = ClassifyYield(lotEvent.YieldPct.Value);
                     var message = $"[{lotEvent.EquipmentId}] LOT Ended: {lotEvent.LotId} | Yield: {lotEvent.YieldPct:F1}% ({classification})";
-                    
+
                     if (classification == "CRITICAL")
                     {
                         var originalColor = Console.ForegroundColor;
@@ -63,13 +65,20 @@ public class LotControlService : BackgroundService
                         Console.WriteLine($"!!! CRITICAL YIELD: {message}");
                         Console.ForegroundColor = originalColor;
                         _logger.LogCritical("R23 CRITICAL: {Message}", message);
+
+                        // 자동 감지 → 운영자 처분 추천 (수율 위기: 재티칭 또는 LOT 중단 권고)
+                        await _recommendations.RaiseAsync(
+                            lotEvent.EquipmentId, "R23", "CRITICAL",
+                            new[] { "RECIPE_LOAD", "LOT_ABORT" },
+                            $"수율 CRITICAL ({lotEvent.YieldPct:F1}%) — 레시피/Teaching 점검 필요",
+                            lotEvent.LotId);
                     }
                     else
                     {
                         _logger.LogInformation(message);
                     }
                 }
-                CheckImbalance(lotEvent.EquipmentId);
+                await CheckImbalanceAsync(lotEvent.EquipmentId);
                 break;
         }
     }
@@ -83,7 +92,7 @@ public class LotControlService : BackgroundService
         _     => "CRITICAL"
     };
 
-    private void CheckImbalance(string equipmentId)
+    private async Task CheckImbalanceAsync(string equipmentId)
     {
         var diff = _startCount.GetValueOrDefault(equipmentId)
                  - _endCount.GetValueOrDefault(equipmentId);
@@ -91,6 +100,13 @@ public class LotControlService : BackgroundService
         {
             _logger.LogCritical("R25 CRITICAL: {EqId} LOT Start/End imbalance detected. Diff: {Diff}",
                                  equipmentId, diff);
+
+            // 자동 감지 → 운영자 처분 추천 (LOT_END 누락 의심: 중단/상태조회 권고)
+            await _recommendations.RaiseAsync(
+                equipmentId, "R25", "CRITICAL",
+                new[] { "LOT_ABORT", "STATUS_QUERY" },
+                $"LOT Start/End 불균형 (diff={diff}) — LOT_END 누락 의심",
+                lotId: null);
         }
     }
 

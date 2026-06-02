@@ -25,10 +25,18 @@ public class EquipmentMonitorService : BackgroundService
     private DateTime _nextDailyReset = DateTime.UtcNow.Date.AddDays(1);
     private DateTime _nextWeeklyReset = GetNextMondayUtc();
 
-    public EquipmentMonitorService(ILogger<EquipmentMonitorService> logger, IMqttClientService mqttClient)
+    private readonly RecommendationService _recommendations;
+
+    // 운영자 콘솔(stdin) 제어가 주 인터페이스이므로, 화면을 5초마다 Console.Clear() 하는
+    // 모니터 패널은 기본 비활성화한다(입력 충돌 방지). MES_SHOW_PANEL=true 로 재활성 가능.
+    private readonly bool _showPanel =
+        string.Equals(Environment.GetEnvironmentVariable("MES_SHOW_PANEL"), "true", StringComparison.OrdinalIgnoreCase);
+
+    public EquipmentMonitorService(ILogger<EquipmentMonitorService> logger, IMqttClientService mqttClient, RecommendationService recommendations)
     {
         _logger = logger;
         _mqttClient = mqttClient;
+        _recommendations = recommendations;
     }
 
     private static DateTime GetNextMondayUtc()
@@ -51,7 +59,7 @@ public class EquipmentMonitorService : BackgroundService
             try
             {
                 CheckResets();
-                DisplayMonitorPanel();
+                if (_showPanel) DisplayMonitorPanel();
             }
             catch (Exception ex)
             {
@@ -101,10 +109,10 @@ public class EquipmentMonitorService : BackgroundService
         return Task.CompletedTask;
     }
 
-    private Task HandleAlarm(MQTTnet.MqttApplicationMessage message)
+    private async Task HandleAlarm(MQTTnet.MqttApplicationMessage message)
     {
         var evt = JsonSerializer.Deserialize<AlarmEvent>(System.Text.Encoding.UTF8.GetString(message.PayloadSegment));
-        if (evt == null) return Task.CompletedTask;
+        if (evt == null) return;
 
         // Special Case: EAP_DISCONNECTED (§부록 A.5)
         if (evt.HwErrorCode == "EAP_DISCONNECTED")
@@ -138,7 +146,16 @@ public class EquipmentMonitorService : BackgroundService
             lock (list) { list.Add(evt); }
         }
 
-        return Task.CompletedTask;
+        // 자동 감지 → 운영자 처분 추천: 운영자 개입이 필요한 알람(예: Teaching 미완성 VISION_SCORE_ERR
+        // WARNING, requires_manual_intervention=true) 또는 CRITICAL 알람을 추천으로 노출한다.
+        if (evt.RequiresManualIntervention || evt.AlarmLevel == "CRITICAL")
+        {
+            await _recommendations.RaiseAsync(
+                evt.EquipmentId, "ALARM", evt.AlarmLevel,
+                RecommendationService.SuggestActionsForAlarm(evt.HwErrorCode),
+                $"{evt.HwErrorCode} - {evt.Reason}",
+                lotId: null);
+        }
     }
 
     private void IncrementRuleCounter(ConcurrentDictionary<string, int> counter, string id, int threshold, string ruleName)
