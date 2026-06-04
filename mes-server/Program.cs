@@ -37,6 +37,7 @@ try
     builder.Services.AddHostedService(sp => sp.GetRequiredService<LotControlService>());
 
     builder.Services.AddSingleton<RecipeControlService>();
+    builder.Services.AddSingleton<RecipeCatalogService>();
 
     builder.Services.AddSingleton<EquipmentMonitorService>();
     builder.Services.AddHostedService(sp => sp.GetRequiredService<EquipmentMonitorService>());

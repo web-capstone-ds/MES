@@ -141,8 +141,17 @@ public class LotControlService : BackgroundService
     public Task LotAbortAsync(string id, string lotId, string reason, CancellationToken ct = default) 
         => SendCommandAsync(id, "LOT_ABORT", reason, targetLotId: lotId, ct: ct);
 
-    public Task RecipeLoadAsync(string id, string recipeName, CancellationToken ct = default) 
-        => SendCommandAsync(id, "RECIPE_LOAD", $"Load {recipeName}", ct: ct);
+    public Task RecipeLoadAsync(string id, string recipeName, string recipeVersion = "v1.0", CancellationToken ct = default) 
+        => SendCommandAsync(
+            id,
+            "RECIPE_LOAD",
+            $"Load {recipeName}",
+            payload: new Dictionary<string, object?>
+            {
+                ["recipe_id"] = recipeName,
+                ["recipe_version"] = recipeVersion,
+            },
+            ct: ct);
 
     public Task AlarmClearAsync(string id, CancellationToken ct = default) 
         => SendCommandAsync(id, "ALARM_CLEAR", ct: ct);

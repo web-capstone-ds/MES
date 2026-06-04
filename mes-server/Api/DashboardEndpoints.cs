@@ -10,14 +10,21 @@ public static class DashboardEndpoints
         app.MapGet("/api/dashboard", (
             EquipmentMonitorService equipment,
             RecommendationService recommendations,
-            ThresholdProposalService thresholdProposals) =>
+            ThresholdProposalService thresholdProposals,
+            RecipeCatalogService recipes) =>
         {
             return Results.Ok(new DashboardSnapshot
             {
                 Equipments = equipment.GetSnapshot(),
                 Recommendations = recommendations.GetAll(),
-                ThresholdProposals = thresholdProposals.GetAll()
+                ThresholdProposals = thresholdProposals.GetAll(),
+                RecipeOptions = recipes.GetAll()
             });
+        });
+
+        app.MapGet("/api/recipes", (RecipeCatalogService recipes) =>
+        {
+            return Results.Ok(recipes.GetAll());
         });
 
         app.MapPost("/api/commands/status-query", async (
@@ -92,6 +99,7 @@ public static class DashboardEndpoints
             EquipmentCommandRequest request,
             LotControlService lot,
             RecommendationService recommendations,
+            RecipeCatalogService recipes,
             CancellationToken ct) =>
         {
             var validation = ValidateEquipment(request.EquipmentId);
@@ -100,9 +108,15 @@ public static class DashboardEndpoints
                 return BadRequest("recipeName is required.");
 
             var recipeName = request.RecipeName.Trim();
-            await lot.RecipeLoadAsync(request.EquipmentId, recipeName, ct);
+            if (!recipes.IsKnown(recipeName))
+                return BadRequest($"unknown recipeName: {recipeName}");
+
+            var recipeVersion = string.IsNullOrWhiteSpace(request.RecipeVersion)
+                ? "v1.0"
+                : request.RecipeVersion.Trim();
+            await lot.RecipeLoadAsync(request.EquipmentId, recipeName, recipeVersion, ct);
             await recommendations.ResolveAsync(request.EquipmentId, "RECIPE_LOAD", ct);
-            return Ok($"RECIPE_LOAD({recipeName}) 발행: {request.EquipmentId}");
+            return Ok($"RECIPE_LOAD({recipeName}/{recipeVersion}) 발행: {request.EquipmentId}");
         });
 
         app.MapPost("/api/threshold-proposals/{proposalId}/approve", async (

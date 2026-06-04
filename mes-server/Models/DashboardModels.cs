@@ -23,9 +23,19 @@ public record DashboardSnapshot
     public IReadOnlyCollection<EquipmentSnapshot> Equipments { get; init; } = Array.Empty<EquipmentSnapshot>();
     public IReadOnlyCollection<ControlRecommendation> Recommendations { get; init; } = Array.Empty<ControlRecommendation>();
     public IReadOnlyCollection<ThresholdProposalRecommendation> ThresholdProposals { get; init; } = Array.Empty<ThresholdProposalRecommendation>();
+    public IReadOnlyCollection<RecipeOption> RecipeOptions { get; init; } = Array.Empty<RecipeOption>();
 }
 
 public record CommandResponse(bool Ok, string Message, string? Error = null);
+
+public record RecipeOption
+{
+    public string RecipeId { get; init; } = "";
+    public string RecipeVersion { get; init; } = "v1.0";
+    public string Label { get; init; } = "";
+    public bool IsNumeric { get; init; }
+    public string Source { get; init; } = "";
+}
 
 public record EquipmentCommandRequest
 {
@@ -33,6 +43,7 @@ public record EquipmentCommandRequest
     public string? Reason { get; init; }
     public string? BurstId { get; init; }
     public string? RecipeName { get; init; }
+    public string? RecipeVersion { get; init; }
 }
 
 public record ThresholdProposalCommandRequest

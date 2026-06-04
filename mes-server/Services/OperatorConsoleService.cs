@@ -118,7 +118,7 @@ public class OperatorConsoleService : BackgroundService
 
             case "recipe":  // recipe <eq> <recipeName>
                 RequireArgs(parts, 3);
-                await _lot.RecipeLoadAsync(parts[1], parts[2], ct);
+                await _lot.RecipeLoadAsync(parts[1], parts[2], "v1.0", ct);
                 await _recommendations.ResolveAsync(parts[1], "RECIPE_LOAD", ct);
                 Console.WriteLine($"  → RECIPE_LOAD({parts[2]}) 발행: {parts[1]}");
                 break;

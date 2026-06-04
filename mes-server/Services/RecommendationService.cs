@@ -91,6 +91,7 @@ public class RecommendationService
         // 설비 결함 → 알람 해제 후 복구, 필요 시 비상정지
         "CAM_TIMEOUT_ERR" or "WRITE_FAIL"        => new[] { "ALARM_CLEAR", "EMERGENCY_STOP" },
         "EAP_DISCONNECTED"                        => new[] { "STATUS_QUERY" },
+        "RECIPE_CHANGED_NOTICE"                   => new[] { "STATUS_QUERY", "ALARM_ACK" },
         _                                          => new[] { "ALARM_CLEAR" },
     };
 }
