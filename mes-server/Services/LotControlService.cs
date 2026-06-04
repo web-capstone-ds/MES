@@ -138,6 +138,9 @@ public class LotControlService : BackgroundService
     public Task EmergencyStopAsync(string id, string reason, CancellationToken ct = default) 
         => SendCommandAsync(id, "EMERGENCY_STOP", reason, ct: ct);
 
+    public Task StartAsync(string id, string reason, CancellationToken ct = default)
+        => SendCommandAsync(id, "START", reason, ct: ct);
+
     public Task LotAbortAsync(string id, string lotId, string reason, CancellationToken ct = default) 
         => SendCommandAsync(id, "LOT_ABORT", reason, targetLotId: lotId, ct: ct);
 

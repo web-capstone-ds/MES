@@ -157,6 +157,7 @@
 
     button:hover { border-color: #94a3b8; background: #f8fafc; }
     button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.success { background: var(--ok); border-color: var(--ok); color: #fff; }
     button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
     button.warning { background: var(--warning); border-color: var(--warning); color: #fff; }
     button:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -253,7 +254,7 @@
               <th style="width: 100px;">수율</th>
               <th style="width: 110px;">알람</th>
               <th>최근 알람</th>
-              <th style="width: 245px;">빠른 조작</th>
+              <th style="width: 260px;">빠른 조작</th>
             </tr>
           </thead>
           <tbody id="equipmentRows">
@@ -276,6 +277,7 @@
           <option value="alarm-clear">ALARM_CLEAR</option>
           <option value="recipe-load">RECIPE_LOAD</option>
           <option value="lot-abort">LOT_ABORT</option>
+          <option value="start">START</option>
           <option value="emergency-stop">EMERGENCY_STOP</option>
         </select>
         <select id="commandRecipe" class="hidden"></select>
@@ -357,6 +359,9 @@
           : `${fmt(eq.currentUnitCount)} / ${eq.expectedTotalUnits == null ? '?' : fmt(eq.expectedTotalUnits)}`;
         const alarm = eq.unacknowledgedAlarmCount > 0 ? `${eq.unacknowledgedAlarmCount}건` : '-';
         const latest = eq.latestAlarmCode ? `${eq.latestAlarmCode} ${eq.latestAlarmReason || ''}` : '-';
+        const runControl = eq.equipmentStatus === 'RUN'
+          ? `<button type="button" class="danger" onclick="quickCommand('emergency-stop','${escAttr(eq.equipmentId)}')">정지</button>`
+          : `<button type="button" class="success" onclick="quickCommand('start','${escAttr(eq.equipmentId)}')">가동</button>`;
         return `
           <tr>
             <td class="mono" title="${esc(eq.equipmentId)}">${esc(eq.equipmentId)}</td>
@@ -372,7 +377,7 @@
                 <button type="button" onclick="quickCommand('status-query','${escAttr(eq.equipmentId)}')">조회</button>
                 <button type="button" onclick="quickCommand('alarm-ack','${escAttr(eq.equipmentId)}')">ACK</button>
                 <button type="button" class="warning" onclick="quickCommand('alarm-clear','${escAttr(eq.equipmentId)}')">해제</button>
-                <button type="button" class="danger" onclick="quickCommand('emergency-stop','${escAttr(eq.equipmentId)}')">정지</button>
+                ${runControl}
               </div>
             </td>
           </tr>`;
@@ -480,7 +485,7 @@
     function updateCommandInputs() {
       const command = commandName.value;
       const isRecipe = command === 'recipe-load';
-      const needsValue = command === 'alarm-ack' || command === 'lot-abort' || command === 'emergency-stop';
+      const needsValue = command === 'alarm-ack' || command === 'lot-abort' || command === 'start' || command === 'emergency-stop';
 
       commandRecipe.classList.toggle('hidden', !isRecipe);
       commandRecipe.required = isRecipe;
@@ -488,6 +493,7 @@
 
       if (command === 'alarm-ack') commandValue.placeholder = 'target burstId (선택)';
       else if (command === 'lot-abort') commandValue.placeholder = 'LOT 중단 사유 (선택)';
+      else if (command === 'start') commandValue.placeholder = '재가동 사유 (선택)';
       else if (command === 'emergency-stop') commandValue.placeholder = '긴급 정지 사유 (선택)';
       else commandValue.placeholder = '';
     }

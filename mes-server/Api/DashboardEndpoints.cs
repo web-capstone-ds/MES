@@ -81,6 +81,20 @@ public static class DashboardEndpoints
             return Ok($"EMERGENCY_STOP 발행: {request.EquipmentId}");
         });
 
+        app.MapPost("/api/commands/start", async (
+            EquipmentCommandRequest request,
+            LotControlService lot,
+            RecommendationService recommendations,
+            CancellationToken ct) =>
+        {
+            var validation = ValidateEquipment(request.EquipmentId);
+            if (validation is not null) return validation;
+
+            await lot.StartAsync(request.EquipmentId, request.Reason ?? "operator start", ct);
+            await recommendations.ResolveAsync(request.EquipmentId, "START", ct);
+            return Ok($"START 발행: {request.EquipmentId}");
+        });
+
         app.MapPost("/api/commands/lot-abort", async (
             EquipmentCommandRequest request,
             LotControlService lot,
