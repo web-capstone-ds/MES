@@ -5,7 +5,7 @@ namespace MesServer.Models;
 /// <summary>
 /// MES 자동 감지(R23/R25/R26/알람 등)가 만든 "제어 추천/경보".
 /// - 모바일은 관제(표시)만: ds/{eq}/recommendation 토픽으로 발행되어 화면에 노출된다.
-/// - 실제 제어(처분)는 운영자가 MES REST API로만 수행한다 (관제/제어 분리).
+/// - 실제 제어(처분)는 운영자가 MES 콘솔에서만 수행한다 (관제/제어 분리).
 /// </summary>
 public record ControlRecommendation
 {

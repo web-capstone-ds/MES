@@ -27,6 +27,10 @@ try
             // 제어 추천(경보) 저장소 + 모바일 관제용 MQTT 발행 (ds/{eq}/recommendation)
             services.AddSingleton<RecommendationService>();
 
+            // Oracle 임계값 제안 캐시: MES 콘솔 treco/tapprove/treject 지원
+            services.AddSingleton<ThresholdProposalService>();
+            services.AddHostedService(sp => sp.GetRequiredService<ThresholdProposalService>());
+
             // Domain Services
             services.AddSingleton<LotControlService>();
             services.AddHostedService(sp => sp.GetRequiredService<LotControlService>());

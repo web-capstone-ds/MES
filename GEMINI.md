@@ -383,11 +383,13 @@ public record ControlCommand
     [JsonPropertyName("message_id")]      public string  MessageId     { get; init; } = Guid.NewGuid().ToString();
     [JsonPropertyName("event_type")]      public string  EventType     { get; init; } = "CONTROL_CMD";
     [JsonPropertyName("timestamp")]       public string  Timestamp     { get; init; } = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+    [JsonPropertyName("equipment_id")]    public string  EquipmentId   { get; init; } = "";
     [JsonPropertyName("command")]         public string  Command       { get; init; } = "";
     [JsonPropertyName("issued_by")]       public string  IssuedBy      { get; init; } = "MES_SERVER";
     [JsonPropertyName("reason")]          public string? Reason        { get; init; }
     [JsonPropertyName("target_lot_id")]   public string? TargetLotId   { get; init; }
     [JsonPropertyName("target_burst_id")] public string? TargetBurstId { get; init; }
+    [JsonPropertyName("payload")]         public Dictionary<string, object?>? Payload { get; init; }
 }
 ```
 
@@ -401,6 +403,8 @@ public record ControlCommand
 | `ALARM_CLEAR` | ✅ | 알람 해제 및 복구 시도 |
 | `STATUS_QUERY` | ✅ | 즉시 STATUS_UPDATE 발행 요청 |
 | `ALARM_ACK` | ✅ | 알람 확인. `target_burst_id` 로 그룹 ACK 가능 (§6.6.2) |
+| `APPROVE_THRESHOLD` | ✅ | Oracle 임계값 제안 승인. `payload.proposal_id` 필수 |
+| `REJECT_THRESHOLD` | ✅ | Oracle 임계값 제안 거부. `payload.proposal_id` 필수 |
 
 ### 5.4 LOT_END 수신 처리
 

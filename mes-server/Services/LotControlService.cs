@@ -110,14 +110,23 @@ public class LotControlService : BackgroundService
         }
     }
 
-    public async Task SendCommandAsync(string equipmentId, string command, string? reason = null, string? targetLotId = null, string? targetBurstId = null, CancellationToken ct = default)
+    public async Task SendCommandAsync(
+        string equipmentId,
+        string command,
+        string? reason = null,
+        string? targetLotId = null,
+        string? targetBurstId = null,
+        Dictionary<string, object?>? payload = null,
+        CancellationToken ct = default)
     {
         var cmd = new ControlCommand
         {
+            EquipmentId = equipmentId,
             Command = command,
             Reason = reason,
             TargetLotId = targetLotId,
-            TargetBurstId = targetBurstId
+            TargetBurstId = targetBurstId,
+            Payload = payload
         };
 
         var topic = $"ds/{equipmentId}/control";
@@ -143,4 +152,28 @@ public class LotControlService : BackgroundService
 
     public Task AlarmAckAsync(string id, string? burstId = null, CancellationToken ct = default) 
         => SendCommandAsync(id, "ALARM_ACK", targetBurstId: burstId, ct: ct);
+
+    public Task ApproveThresholdAsync(string equipmentId, string proposalId, string approvedBy, CancellationToken ct = default)
+        => SendCommandAsync(
+            equipmentId,
+            "APPROVE_THRESHOLD",
+            payload: new Dictionary<string, object?>
+            {
+                ["proposal_id"] = proposalId,
+                ["approved_by"] = approvedBy
+            },
+            ct: ct);
+
+    public Task RejectThresholdAsync(string equipmentId, string proposalId, string rejectedBy, string? reason, CancellationToken ct = default)
+        => SendCommandAsync(
+            equipmentId,
+            "REJECT_THRESHOLD",
+            reason: reason,
+            payload: new Dictionary<string, object?>
+            {
+                ["proposal_id"] = proposalId,
+                ["rejected_by"] = rejectedBy,
+                ["reason"] = reason ?? ""
+            },
+            ct: ct);
 }

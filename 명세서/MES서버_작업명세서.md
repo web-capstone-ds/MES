@@ -258,11 +258,13 @@ LOT 제어 명령 발행 및 LOT_END 이벤트 수신 처리.
 | MessageId | `message_id` | string | UUID v4 자동 생성 |
 | EventType | `event_type` | string | "CONTROL_CMD" 고정 |
 | Timestamp | `timestamp` | string | UTC `.fffZ` 자동 생성 |
+| EquipmentId | `equipment_id` | string | 토픽의 장비 ID와 동일 |
 | Command | `command` | string | 명령 코드 |
 | IssuedBy | `issued_by` | string | "MES_SERVER" 고정 |
 | Reason | `reason` | string? | 선택 |
 | TargetLotId | `target_lot_id` | string? | 선택 |
 | TargetBurstId | `target_burst_id` | string? | ALARM_ACK 그룹 ACK용 |
+| Payload | `payload` | object? | 임계값 승인/거부 등 확장 명령 파라미터 |
 
 ### StatusEvent (STATUS_UPDATE 수신용)
 

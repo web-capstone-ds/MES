@@ -7,11 +7,13 @@ public record ControlCommand
     [JsonPropertyName("message_id")]      public string  MessageId     { get; init; } = Guid.NewGuid().ToString();
     [JsonPropertyName("event_type")]      public string  EventType     { get; init; } = "CONTROL_CMD";
     [JsonPropertyName("timestamp")]       public string  Timestamp     { get; init; } = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+    [JsonPropertyName("equipment_id")]    public string  EquipmentId   { get; init; } = "";
     [JsonPropertyName("command")]         public string  Command       { get; init; } = "";
     [JsonPropertyName("issued_by")]       public string  IssuedBy      { get; init; } = "MES_SERVER";
     [JsonPropertyName("reason")]          public string? Reason        { get; init; }
     [JsonPropertyName("target_lot_id")]   public string? TargetLotId   { get; init; }
     [JsonPropertyName("target_burst_id")] public string? TargetBurstId { get; init; }
+    [JsonPropertyName("payload")]         public Dictionary<string, object?>? Payload { get; init; }
 }
 
 public record LotEvent
