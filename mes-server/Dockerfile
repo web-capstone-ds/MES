@@ -11,7 +11,7 @@ RUN dotnet publish MesServer.csproj \
     -o /app/publish \
     /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 WORKDIR /app
 ENV DOTNET_EnableDiagnostics=0

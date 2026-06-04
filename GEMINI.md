@@ -228,7 +228,7 @@ C# 콘솔 앱(.NET 8 / Generic Host)으로 구성한다. `EAP_mock_data/scenario
 | 패키지 | 버전 | 용도 |
 | :--- | :--- | :--- |
 | `MQTTnet` | 4.x | MQTT 클라이언트 |
-| `Microsoft.Extensions.Hosting` | 8.x | Generic Host / DI |
+| `ASP.NET Core` | 8.x | 로컬 대시보드 + HostedService / DI |
 | `Serilog.Extensions.Hosting` | 최신 | 구조적 로깅 |
 | `Serilog.Sinks.Console` | 최신 | 콘솔 출력 |
 
@@ -445,6 +445,8 @@ private void CheckImbalance(string equipmentId)
 - [ ] `message_id` = `Guid.NewGuid().ToString()` UUID v4
 - [ ] `timestamp` = UTC `.fffZ` 포맷
 - [ ] `ALARM_ACK` 발행 시 `target_burst_id` nullable 처리
+- [ ] 로컬 대시보드 `GET /api/dashboard` 200 JSON 응답
+- [ ] 로컬 대시보드 command API가 콘솔 명령과 동일한 `LotControlService` 메서드 호출
 - [ ] `yield_pct < 80` → `LogCritical` + 콘솔 빨간 출력
 - [ ] Start/End 차이 ≥ 5 → `LogCritical` (R25)
 

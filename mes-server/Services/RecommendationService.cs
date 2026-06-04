@@ -8,7 +8,7 @@ namespace MesServer.Services;
 
 /// <summary>
 /// 제어 추천(경보)을 보관하고, 모바일 관제용으로 MQTT(ds/{eq}/recommendation)에 발행한다.
-/// 행동(제어)은 하지 않는다 — 운영자가 MES 콘솔에서만 처분한다.
+/// 행동(제어)은 하지 않는다 — 운영자가 MES 로컬 운영 인터페이스에서만 처분한다.
 /// 장비당 최신 OPEN 추천 1건을 유지한다(retained 메시지와 동일 의미).
 /// </summary>
 public class RecommendationService

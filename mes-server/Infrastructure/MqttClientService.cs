@@ -34,6 +34,7 @@ public class MqttClientService : BackgroundService, IMqttClientService
             .WithCredentials(_options.Username, _options.Password)
             .WithClientId(_options.ClientId)
             .WithKeepAlivePeriod(TimeSpan.FromSeconds(_options.KeepAliveSec))
+            .WithTimeout(TimeSpan.FromSeconds(3))
             .WithWillTopic($"ds/{_options.ClientId}/status")
             .WithWillRetain(true)
             .WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
@@ -98,6 +99,7 @@ public class MqttClientService : BackgroundService, IMqttClientService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        await Task.Yield();
         int attempt = 0;
 
         while (!stoppingToken.IsCancellationRequested)

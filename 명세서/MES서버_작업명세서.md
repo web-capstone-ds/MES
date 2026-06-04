@@ -45,7 +45,7 @@ mes-server/
 | 패키지 | 버전 | 용도 |
 | :--- | :--- | :--- |
 | `MQTTnet` | 4.3.7.1207 | MQTT 클라이언트 |
-| `Microsoft.Extensions.Hosting` | 8.0.0 | Generic Host / DI |
+| `ASP.NET Core` | 8.0.0 | 로컬 대시보드 + HostedService / DI |
 | `Serilog.Extensions.Hosting` | 8.0.0 | 구조적 로깅 |
 | `Serilog.Sinks.Console` | 5.0.1 | 콘솔 출력 |
 
@@ -189,6 +189,15 @@ LOT 제어 명령 발행 및 LOT_END 이벤트 수신 처리.
 **콘솔 모니터링 패널** (5초 주기 갱신)
 
 ```
+
+**로컬 웹 대시보드 MVP**
+
+- URL: `http://127.0.0.1:8081/`
+- Docker Compose: `127.0.0.1:8081:8081`
+- `GET /api/dashboard`: 장비 상태, 추천, 임계값 제안 조회
+- `POST /api/commands/*`: 기존 콘솔 명령과 동일한 CONTROL_CMD 발행
+- `POST /api/threshold-proposals/{proposalId}/approve|reject`: 임계값 제안 승인/거부
+- 모바일/Web-Backend 경유 제어는 사용하지 않음
 --- MES 장비 모니터링 패널 (2026-01-22 16:41:41 UTC) ---
 [DS-VIS-001] RUN  | Carsem_3X3 | 1,247 / 2,792 (44.7%) | 수율 95.8%
 [DS-VIS-002] RUN  | Carsem_4X6 |   850 / ?     ( ?.?%) | 수율 68.5% ⚠ WARNING

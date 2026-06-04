@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace MesServer.Services;
 
 /// <summary>
-/// 운영자 수동 제어를 MES "콘솔(stdin)"에서만 처리한다.
-/// 보안 원칙: 제어는 MES 로컬 콘솔 전용 — 네트워크/REST/Web-Backend 등 외부 진입점을 두지 않는다.
-/// 자동 감지(R23/R25/알람)는 추천만 만들고, 운영자가 이 콘솔에서 처분(제어 명령)을 발동한다.
+/// 운영자 수동 제어를 MES 로컬 운영 인터페이스에서만 처리한다.
+/// 보안 원칙: 제어는 MES 로컬 콘솔/대시보드 전용 — Web-Backend 등 외부 진입점을 두지 않는다.
+/// 자동 감지(R23/R25/알람)는 추천만 만들고, 운영자가 이 인터페이스에서 처분(제어 명령)을 발동한다.
 /// 모바일은 ds/{eq}/recommendation을 표시만 한다(관제).
 /// </summary>
 public class OperatorConsoleService : BackgroundService

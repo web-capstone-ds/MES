@@ -111,6 +111,11 @@ public class EquipmentMonitorService : BackgroundService
 
     private async Task HandleAlarm(MQTTnet.MqttApplicationMessage message)
     {
+        if (message.PayloadSegment.Count == 0)
+        {
+            return;
+        }
+
         var evt = JsonSerializer.Deserialize<AlarmEvent>(System.Text.Encoding.UTF8.GetString(message.PayloadSegment));
         if (evt == null) return;
 
@@ -156,6 +161,56 @@ public class EquipmentMonitorService : BackgroundService
                 $"{evt.HwErrorCode} - {evt.Reason}",
                 lotId: null);
         }
+    }
+
+    public IReadOnlyCollection<EquipmentSnapshot> GetSnapshot()
+    {
+        var ids = _currentStatus.Keys
+            .Concat(_lastHeartbeat.Keys)
+            .Concat(_unacknowledgedAlarms.Keys)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToArray();
+
+        var now = DateTime.UtcNow;
+        var snapshots = new List<EquipmentSnapshot>(ids.Length);
+
+        foreach (var id in ids)
+        {
+            _currentStatus.TryGetValue(id, out var status);
+            _lastHeartbeat.TryGetValue(id, out var lastHeartbeat);
+            var onlineStatus = GetOnlineStatus(id);
+            var alarmCount = 0;
+            AlarmEvent? latestAlarm = null;
+
+            if (_unacknowledgedAlarms.TryGetValue(id, out var alarms))
+            {
+                lock (alarms)
+                {
+                    alarmCount = alarms.Count;
+                    latestAlarm = alarms.LastOrDefault();
+                }
+            }
+
+            snapshots.Add(new EquipmentSnapshot
+            {
+                EquipmentId = id,
+                EquipmentStatus = status?.Status ?? "UNKNOWN",
+                RecipeId = status?.CurrentRecipe,
+                CurrentUnitCount = status?.CurrentUnitCount,
+                ExpectedTotalUnits = status?.ExpectedTotalUnits,
+                CurrentYieldPct = status?.CurrentYieldPct,
+                OnlineStatus = onlineStatus.ToString(),
+                LastHeartbeatUtc = lastHeartbeat == default ? null : lastHeartbeat.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                HeartbeatAgeSec = lastHeartbeat == default ? null : Math.Round((now - lastHeartbeat).TotalSeconds, 1),
+                UnacknowledgedAlarmCount = alarmCount,
+                LatestAlarmLevel = latestAlarm?.AlarmLevel,
+                LatestAlarmCode = latestAlarm?.HwErrorCode,
+                LatestAlarmReason = latestAlarm?.Reason
+            });
+        }
+
+        return snapshots;
     }
 
     private void IncrementRuleCounter(ConcurrentDictionary<string, int> counter, string id, int threshold, string ruleName)

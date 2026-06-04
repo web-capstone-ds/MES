@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MES Local Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d8dee8;
+      --accent: #2563eb;
+      --danger: #b91c1c;
+      --warning: #b45309;
+      --ok: #047857;
+      --shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 20px;
+      background: #111827;
+      color: #fff;
+      border-bottom: 1px solid #0f172a;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-head {
+      min-height: 44px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .muted { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+      gap: 14px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf0f5;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    th {
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      background: #f8fafc;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 74px;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #eef2ff;
+      color: #3730a3;
+    }
+
+    .status.RUN, .status.Online, .status.OPEN { background: #dcfce7; color: #166534; }
+    .status.STOP, .status.Offline, .status.CRITICAL { background: #fee2e2; color: #991b1b; }
+    .status.Warning, .status.WARNING { background: #fef3c7; color: #92400e; }
+    .status.IDLE { background: #e0f2fe; color: #075985; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    button, select, input {
+      height: 34px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+    }
+
+    button {
+      padding: 0 10px;
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    button:hover { border-color: #94a3b8; background: #f8fafc; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    button.warning { background: var(--warning); border-color: var(--warning); color: #fff; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    input, select {
+      padding: 0 10px;
+      min-width: 0;
+    }
+
+    .command-bar {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 180px 190px minmax(180px, 1fr) 96px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .list {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      background: #fff;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .empty { padding: 18px; color: var(--muted); }
+
+    #toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      max-width: min(420px, calc(100vw - 32px));
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #111827;
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.25);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 160ms ease, transform 160ms ease;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .command-bar { grid-template-columns: 1fr; }
+      header { height: auto; min-height: 56px; align-items: flex-start; flex-direction: column; padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MES Local Dashboard</h1>
+    <div class="muted" id="updatedAt">연결 대기</div>
+  </header>
+
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>장비 상태</h2>
+        <span class="muted">2초 주기 갱신</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 150px;">장비</th>
+              <th style="width: 96px;">상태</th>
+              <th style="width: 105px;">온라인</th>
+              <th style="width: 170px;">레시피</th>
+              <th style="width: 170px;">진행</th>
+              <th style="width: 100px;">수율</th>
+              <th style="width: 110px;">알람</th>
+              <th>최근 알람</th>
+              <th style="width: 245px;">빠른 조작</th>
+            </tr>
+          </thead>
+          <tbody id="equipmentRows">
+            <tr><td colspan="9" class="empty">데이터 수신 대기</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>수동 명령</h2>
+        <span class="muted">기존 MES 콘솔 명령과 동일한 CONTROL_CMD 발행</span>
+      </div>
+      <form class="command-bar" id="commandForm">
+        <select id="commandEq" required></select>
+        <select id="commandName" required>
+          <option value="status-query">STATUS_QUERY</option>
+          <option value="alarm-ack">ALARM_ACK</option>
+          <option value="alarm-clear">ALARM_CLEAR</option>
+          <option value="recipe-load">RECIPE_LOAD</option>
+          <option value="lot-abort">LOT_ABORT</option>
+          <option value="emergency-stop">EMERGENCY_STOP</option>
+        </select>
+        <input id="commandValue" placeholder="reason / recipeName / burstId">
+        <button class="primary" type="submit">발행</button>
+      </form>
+    </section>
+
+    <div class="grid">
+      <section>
+        <div class="section-head">
+          <h2>대기 추천</h2>
+          <span class="muted" id="recommendationCount">0건</span>
+        </div>
+        <div class="list" id="recommendationList">
+          <div class="empty">대기 중인 추천 없음</div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>임계값 제안</h2>
+          <span class="muted" id="proposalCount">0건</span>
+        </div>
+        <div class="list" id="proposalList">
+          <div class="empty">대기 중인 임계값 제안 없음</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    const state = { equipments: [], recommendations: [], proposals: [] };
+    const equipmentRows = document.getElementById('equipmentRows');
+    const recommendationList = document.getElementById('recommendationList');
+    const proposalList = document.getElementById('proposalList');
+    const commandEq = document.getElementById('commandEq');
+    const commandName = document.getElementById('commandName');
+    const commandValue = document.getElementById('commandValue');
+    const toast = document.getElementById('toast');
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`dashboard ${res.status}`);
+        const data = await res.json();
+        state.equipments = data.equipments || [];
+        state.recommendations = data.recommendations || [];
+        state.proposals = data.thresholdProposals || [];
+        render(data.timestampUtc);
+      } catch (err) {
+        showToast(`대시보드 갱신 실패: ${err.message}`);
+      }
+    }
+
+    function render(timestampUtc) {
+      document.getElementById('updatedAt').textContent = timestampUtc ? `갱신 ${timestampUtc}` : '갱신 시간 없음';
+      renderEquipment();
+      renderRecommendations();
+      renderProposals();
+      renderEquipmentOptions();
+    }
+
+    function renderEquipment() {
+      if (state.equipments.length === 0) {
+        equipmentRows.innerHTML = '<tr><td colspan="9" class="empty">장비 상태 수신 전</td></tr>';
+        return;
+      }
+
+      equipmentRows.innerHTML = state.equipments.map(eq => {
+        const progress = eq.currentUnitCount == null
+          ? '-'
+          : `${fmt(eq.currentUnitCount)} / ${eq.expectedTotalUnits == null ? '?' : fmt(eq.expectedTotalUnits)}`;
+        const alarm = eq.unacknowledgedAlarmCount > 0 ? `${eq.unacknowledgedAlarmCount}건` : '-';
+        const latest = eq.latestAlarmCode ? `${eq.latestAlarmCode} ${eq.latestAlarmReason || ''}` : '-';
+        return `
+          <tr>
+            <td class="mono" title="${esc(eq.equipmentId)}">${esc(eq.equipmentId)}</td>
+            <td><span class="status ${esc(eq.equipmentStatus)}">${esc(eq.equipmentStatus)}</span></td>
+            <td><span class="status ${esc(eq.onlineStatus)}">${esc(eq.onlineStatus)}</span></td>
+            <td title="${esc(eq.recipeId || '-')}">${esc(eq.recipeId || '-')}</td>
+            <td>${progress}</td>
+            <td>${eq.currentYieldPct == null ? '-' : `${Number(eq.currentYieldPct).toFixed(1)}%`}</td>
+            <td>${alarm}</td>
+            <td title="${esc(latest)}">${esc(latest)}</td>
+            <td>
+              <div class="actions">
+                <button type="button" onclick="quickCommand('status-query','${escAttr(eq.equipmentId)}')">조회</button>
+                <button type="button" onclick="quickCommand('alarm-ack','${escAttr(eq.equipmentId)}')">ACK</button>
+                <button type="button" class="warning" onclick="quickCommand('alarm-clear','${escAttr(eq.equipmentId)}')">해제</button>
+                <button type="button" class="danger" onclick="quickCommand('emergency-stop','${escAttr(eq.equipmentId)}')">정지</button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    function renderRecommendations() {
+      document.getElementById('recommendationCount').textContent = `${state.recommendations.length}건`;
+      if (state.recommendations.length === 0) {
+        recommendationList.innerHTML = '<div class="empty">대기 중인 추천 없음</div>';
+        return;
+      }
+
+      recommendationList.innerHTML = state.recommendations.map(r => `
+        <div class="item">
+          <div class="item-row">
+            <strong>${esc(r.equipment_id || r.equipmentId || '-')} · ${esc(r.rule || '-')}</strong>
+            <span class="status ${esc(r.severity || '')}">${esc(r.severity || '-')}</span>
+          </div>
+          <div>${esc(r.reason || '-')}</div>
+          <div class="muted">권고: ${esc((r.suggested_actions || r.suggestedActions || []).join(', ') || '-')}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderProposals() {
+      document.getElementById('proposalCount').textContent = `${state.proposals.length}건`;
+      if (state.proposals.length === 0) {
+        proposalList.innerHTML = '<div class="empty">대기 중인 임계값 제안 없음</div>';
+        return;
+      }
+
+      proposalList.innerHTML = state.proposals.map(p => {
+        const eq = p.equipmentId || p.equipment_id || '';
+        const proposalId = p.proposalId || p.proposal_id || '';
+        const current = thresholdText(p.currentWarning ?? p.current_warning, p.currentCritical ?? p.current_critical);
+        const proposed = thresholdText(p.proposedWarning ?? p.proposed_warning, p.proposedCritical ?? p.proposed_critical);
+        return `
+          <div class="item">
+            <div class="item-row">
+              <strong class="mono">${esc(eq)}</strong>
+              <span class="mono muted">${esc(proposalId)}</span>
+            </div>
+            <div>${esc(p.metric || '-')} · ${current} → ${proposed}</div>
+            <div class="muted">${esc(p.basis || '-')}</div>
+            <div class="actions">
+              <button type="button" class="primary" onclick="thresholdAction('approve','${escAttr(eq)}','${escAttr(proposalId)}')">승인</button>
+              <button type="button" class="warning" onclick="thresholdAction('reject','${escAttr(eq)}','${escAttr(proposalId)}')">거부</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderEquipmentOptions() {
+      const ids = state.equipments.map(e => e.equipmentId).filter(Boolean);
+      const current = commandEq.value;
+      commandEq.innerHTML = ids.length === 0
+        ? '<option value="">장비 없음</option>'
+        : ids.map(id => `<option value="${escAttr(id)}">${esc(id)}</option>`).join('');
+      if (ids.includes(current)) commandEq.value = current;
+    }
+
+    document.getElementById('commandForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const equipmentId = commandEq.value;
+      const command = commandName.value;
+      const value = commandValue.value.trim();
+      const body = { equipmentId };
+      if (command === 'recipe-load') body.recipeName = value;
+      else if (command === 'alarm-ack') body.burstId = value || null;
+      else body.reason = value || null;
+      await sendCommand(`/api/commands/${command}`, body, `${command.toUpperCase()} 발행`);
+    });
+
+    async function quickCommand(command, equipmentId) {
+      await sendCommand(`/api/commands/${command}`, { equipmentId }, `${equipmentId} ${command.toUpperCase()} 발행`);
+    }
+
+    async function thresholdAction(action, equipmentId, proposalId) {
+      const body = { equipmentId };
+      if (action === 'reject') {
+        body.reason = prompt('거부 사유를 입력하세요.', '현장 조건과 불일치') || '';
+      }
+      await sendCommand(`/api/threshold-proposals/${encodeURIComponent(proposalId)}/${action}`, body, `${proposalId} ${action}`);
+    }
+
+    async function sendCommand(url, body, label) {
+      if (!body.equipmentId) {
+        showToast('equipmentId가 필요합니다.');
+        return;
+      }
+      if (!confirm(`${label} 명령을 실행할까요?`)) return;
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) throw new Error(data.error || `HTTP ${res.status}`);
+        showToast(data.message || '명령 발행 완료');
+        await loadDashboard();
+      } catch (err) {
+        showToast(`명령 실패: ${err.message}`);
+      }
+    }
+
+    function thresholdText(warn, crit) {
+      return `warn=${warn == null ? '-' : warn}, crit=${crit == null ? '-' : crit}`;
+    }
+
+    function fmt(value) {
+      return Number(value).toLocaleString('ko-KR');
+    }
+
+    function esc(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function escAttr(value) {
+      return esc(value).replace(/`/g, '&#96;');
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    loadDashboard();
+    setInterval(loadDashboard, 2000);
+  </script>
+</body>
+</html>
